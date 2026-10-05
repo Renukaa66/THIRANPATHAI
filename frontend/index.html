@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ThiranPathai</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="phone">
+  <header class="top">
+    <div><div class="word">Thiran<span>Pathai</span></div><div class="sub">know the gap. follow the path.</div></div>
+  </header>
+
+  <main>
+    <!-- RESUME SCREEN -->
+    <section class="screen active" data-screen="resume">
+      <h2 class="title">Your Resume</h2>
+      <p class="hint">Upload your resume file (PDF, Word, or TXT). We'll read it and pick out the skills automatically.</p>
+
+      <label class="field" for="resumeFile">Tap to upload resume</label>
+      <input type="file" id="resumeFile" accept=".pdf,.docx,.doc,.txt" class="fileInput">
+      <div id="uploadStatus" class="statusText"></div>
+
+      <label class="field">Extracted text (edit if anything looks off)</label>
+      <textarea id="resumeInput" placeholder="Upload a file above — extracted text will appear here."></textarea>
+      <button class="btn primary" id="extractBtn">Re-extract Skills From This Text</button>
+      <div id="resumeSkillsWrap" style="margin-top:16px;"></div>
+    </section>
+
+    <!-- COMPANIES SCREEN -->
+    <section class="screen" data-screen="companies">
+      <h2 class="title">Companies</h2>
+      <p class="hint">Default roles below, or add any company/role by entering the skills it needs.</p>
+
+      <label class="field">Company or role name</label>
+      <input type="text" id="companyName" placeholder="e.g. Data Analyst, Infosys, Frontend Dev">
+      <label class="field">Skills required (comma separated)</label>
+      <input type="text" id="companySkills" placeholder="e.g. Python, SQL, Excel, Power BI">
+      <button class="btn amber" id="addCompanyBtn">Add & Check Fit</button>
+
+      <div id="companyList" style="margin-top:16px;"></div>
+    </section>
+
+    <!-- ROADMAP SCREEN -->
+    <section class="screen" data-screen="roadmap">
+      <h2 class="title">Learning Roadmap</h2>
+      <p class="hint" id="roadmapHint">Pick a company from the Companies tab to see your personalised roadmap.</p>
+      <div id="roadmapList"></div>
+      <button class="btn primary" id="updateResumeBtn" style="display:none">Mark Learned Skills → Update Resume</button>
+    </section>
+
+    <!-- TEST SCREEN -->
+    <section class="screen" data-screen="test">
+      <h2 class="title">Skill Test</h2>
+      <p class="hint">Take a short test for the role you're targeting. Graded instantly on the server.</p>
+      <div id="testSetup"></div>
+      <div id="testArea"></div>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button class="active" data-tab="resume"><span class="ic">&#128221;</span>Resume</button>
+    <button data-tab="companies"><span class="ic">&#127970;</span>Companies</button>
+    <button data-tab="roadmap"><span class="ic">&#128506;</span>Roadmap</button>
+    <button data-tab="test"><span class="ic">&#9998;&#65039;</span>Test</button>
+  </nav>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

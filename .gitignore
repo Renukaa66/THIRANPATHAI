@@ -1,0 +1,11 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Database (don't push your local data — Render creates a fresh one)
+backend/thiranpathai.db
+
+# OS/editor junk
+.DS_Store
+.vscode/
