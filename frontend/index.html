@@ -4,15 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ThiranPathai</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div id="splash">
+  <img src="logo.svg" alt="ThiranPathai">
+</div>
 <div class="phone">
   <header class="top">
-    <div><div class="word">Thiran<span>Pathai</span></div><div class="sub">know the gap. follow the path.</div></div>
+    <div class="brandRow">
+      <img src="logo.svg" alt="ThiranPathai logo" class="headerLogo">
+      <div><div class="word">Thiran<span>Pathai</span></div><div class="sub">know the gap. follow the path.</div></div>
+    </div>
+    <button id="logoutBtn" class="logoutBtn" style="display:none;">Logout</button>
   </header>
 
-  <main>
+  <!-- AUTH SCREEN -->
+  <div id="authScreen" class="authWrap">
+    <div class="authLogoWrap">
+      <img src="logo.svg" alt="ThiranPathai logo" class="authLogo">
+    </div>
+    <h2 class="title" id="authTitle" style="text-align:center;">Welcome back</h2>
+    <p class="hint" id="authHint">Log in to save your resume and pick up where you left off.</p>
+
+    <div id="signupNameWrap" style="display:none;">
+      <label class="field">Name</label>
+      <input type="text" id="authName" placeholder="Your name">
+    </div>
+    <label class="field">Email</label>
+    <input type="text" id="authEmail" placeholder="you@example.com">
+    <label class="field">Password</label>
+    <input type="password" id="authPassword" placeholder="At least 6 characters">
+
+    <div id="authError" class="authError"></div>
+
+    <button class="btn primary" id="authSubmitBtn">Log In</button>
+    <button class="btn ghost" id="authToggleBtn">New here? Create an account</button>
+  </div>
+
+  <main style="display:none;" id="mainApp">
     <!-- RESUME SCREEN -->
     <section class="screen active" data-screen="resume">
       <h2 class="title">Your Resume</h2>

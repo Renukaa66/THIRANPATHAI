@@ -18,6 +18,15 @@ header.top{ padding:18px 18px 14px; border-bottom:1px solid var(--line); }
 header.top .word{font-size:20px;font-weight:700;color:var(--ink);}
 header.top .word span{color:var(--amber-dark);}
 header.top .sub{font-size:11px;color:var(--muted);}
+header.top{display:flex; justify-content:space-between; align-items:flex-start;}
+.brandRow{display:flex; align-items:center; gap:10px;}
+.headerLogo{width:34px; height:34px; border-radius:8px; flex-shrink:0;}
+.authLogoWrap{display:flex; justify-content:center; margin-bottom:18px;}
+.authLogo{width:72px; height:72px; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,0.15);}
+.logoutBtn{background:transparent; border:1px solid var(--line); color:var(--muted); font-size:11px; padding:6px 10px; border-radius:8px; cursor:pointer; font-family:inherit;}
+.authWrap{padding:16px;}
+.authWrap #authHint{text-align:center;}
+.authError{font-size:12px; color:var(--bad); margin-top:8px; min-height:16px;}
 main{flex:1; padding:16px 16px 90px; overflow-y:auto;}
 .screen{display:none;}
 .screen.active{display:block;}
@@ -67,3 +76,26 @@ nav.tabs button{ flex:1; border:none; background:transparent; padding:11px 4px 9
 nav.tabs button .ic{font-size:17px;}
 nav.tabs button.active{color:var(--ink); font-weight:700;}
 nav.tabs button.active .ic{color:var(--amber-dark);}
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #ffffff; /* உங்க logo background color-ஓட match பண்ணுங்க */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+}
+#splash img {
+  width: 60%;
+  max-width: 260px;
+  animation: pop 0.8s ease;
+}
+#splash.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+@keyframes pop {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}

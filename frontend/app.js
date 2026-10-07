@@ -1,6 +1,91 @@
 const API = ""; // same-origin, backend serves this file too
 
 let state = { resumeSkills: [], resumeText: "", learnedSkills: [], companies: [], selectedCompanyId: null };
+let authMode = "login"; // or "signup"
+let authToken = localStorage.getItem("thiranpathai_token") || null;
+
+/* ---------- Auth ---------- */
+function authHeaders(){
+  return authToken ? { "Authorization": "Bearer " + authToken } : {};
+}
+
+document.getElementById("authToggleBtn").addEventListener("click", ()=>{
+  authMode = authMode === "login" ? "signup" : "login";
+  document.getElementById("authTitle").textContent = authMode === "login" ? "Welcome back" : "Create your account";
+  document.getElementById("authHint").textContent = authMode === "login"
+    ? "Log in to save your resume and pick up where you left off."
+    : "Sign up to save your resume and track your progress.";
+  document.getElementById("signupNameWrap").style.display = authMode === "signup" ? "block" : "none";
+  document.getElementById("authSubmitBtn").textContent = authMode === "login" ? "Log In" : "Sign Up";
+  document.getElementById("authToggleBtn").textContent = authMode === "login" ? "New here? Create an account" : "Already have an account? Log in";
+  document.getElementById("authError").textContent = "";
+});
+
+document.getElementById("authSubmitBtn").addEventListener("click", async ()=>{
+  const email = document.getElementById("authEmail").value.trim();
+  const password = document.getElementById("authPassword").value;
+  const errEl = document.getElementById("authError");
+  errEl.textContent = "";
+
+  if(!email || !password){ errEl.textContent = "Please fill in email and password."; return; }
+
+  const endpoint = authMode === "login" ? "/api/auth/login" : "/api/auth/signup";
+  const body = authMode === "login"
+    ? { email, password }
+    : { name: document.getElementById("authName").value.trim(), email, password };
+
+  if(authMode === "signup" && !body.name){ errEl.textContent = "Please enter your name."; return; }
+
+  try{
+    const res = await fetch(API + endpoint, {
+      method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if(!res.ok){ errEl.textContent = data.detail || "Something went wrong."; return; }
+    authToken = data.access_token;
+    localStorage.setItem("thiranpathai_token", authToken);
+    enterApp();
+  }catch(e){
+    errEl.textContent = "Couldn't reach the server. Is the backend running?";
+  }
+});
+
+document.getElementById("logoutBtn").addEventListener("click", ()=>{
+  authToken = null;
+  localStorage.removeItem("thiranpathai_token");
+  state = { resumeSkills: [], resumeText: "", learnedSkills: [], companies: [], selectedCompanyId: null };
+  document.getElementById("resumeInput").value = "";
+  document.getElementById("authScreen").style.display = "block";
+  document.getElementById("mainApp").style.display = "none";
+  document.getElementById("logoutBtn").style.display = "none";
+});
+
+async function enterApp(){
+  document.getElementById("authScreen").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  document.getElementById("logoutBtn").style.display = "inline-block";
+  // try to restore a previously saved resume for this user
+  try{
+    const res = await fetch(API + "/api/resume/me", { headers: authHeaders() });
+    if(res.ok){
+      const data = await res.json();
+      state.resumeText = data.text;
+      state.resumeSkills = data.skills;
+      document.getElementById("resumeInput").value = data.text;
+      renderResumeSkills();
+    }
+  }catch(e){ /* no saved resume yet — fine */ }
+  loadCompanies();
+}
+
+async function checkExistingSession(){
+  if(!authToken) return; // show auth screen
+  try{
+    const res = await fetch(API + "/api/auth/me", { headers: authHeaders() });
+    if(res.ok){ enterApp(); }
+    else { authToken = null; localStorage.removeItem("thiranpathai_token"); }
+  }catch(e){ /* backend not reachable yet, stay on auth screen */ }
+}
 
 function cap(s){ return s.replace(/\b\w/g, c => c.toUpperCase()); }
 
@@ -25,7 +110,7 @@ document.getElementById("resumeFile").addEventListener("change", async (evt)=>{
   const form = new FormData();
   form.append("file", file);
   try{
-    const res = await fetch(API + "/api/resume/parse", { method: "POST", body: form });
+    const res = await fetch(API + "/api/resume/parse", { method: "POST", headers: authHeaders(), body: form });
     const data = await res.json();
     if(!res.ok){ statusEl.textContent = data.detail || "Couldn't read that file."; return; }
     document.getElementById("resumeInput").value = data.text;
@@ -43,7 +128,7 @@ document.getElementById("extractBtn").addEventListener("click", async ()=>{
   const blob = new Blob([text], {type:"text/plain"});
   const form = new FormData();
   form.append("file", blob, "resume.txt");
-  const res = await fetch(API + "/api/resume/parse", { method:"POST", body: form });
+  const res = await fetch(API + "/api/resume/parse", { method:"POST", headers: authHeaders(), body: form });
   const data = await res.json();
   state.resumeText = text;
   state.resumeSkills = data.skills || [];
@@ -268,4 +353,12 @@ async function finishQuiz(){
 }
 
 /* init */
-loadCompanies();
+checkExistingSession();
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const s = document.getElementById('splash');
+    if (!s) return;
+    s.classList.add('hide');
+    setTimeout(() => s.remove(), 600);
+  }, 2000);
+});
