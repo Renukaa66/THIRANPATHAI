@@ -7,6 +7,7 @@ import os
 from database import Base, engine, get_db
 import models
 import schemas
+import auth
 from resume_parser import extract_text, extract_skills
 from skills_data import DEFAULT_COMPANIES, RESOURCES, PREREQ, QUIZ
 
@@ -28,16 +29,72 @@ def to_out(c: models.Company) -> schemas.CompanyOut:
     return schemas.CompanyOut(id=c.id, name=c.name, role=c.role, skills=c.skills.split(","))
 
 
+# ---------- Auth ----------
+@app.post("/api/auth/signup", response_model=schemas.TokenOut)
+def signup(payload: schemas.UserSignup, db: Session = Depends(get_db)):
+    email = payload.email.strip().lower()
+    if not payload.name.strip() or not email or len(payload.password) < 6:
+        raise HTTPException(status_code=400, detail="Please fill in all fields — password needs at least 6 characters.")
+    existing = db.query(models.User).filter(models.User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="An account with this email already exists. Try logging in instead.")
+    user = models.User(name=payload.name.strip(), email=email, hashed_password=auth.hash_password(payload.password))
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = auth.create_access_token(user.id)
+    return schemas.TokenOut(access_token=token, user=schemas.UserOut.model_validate(user))
+
+
+@app.post("/api/auth/login", response_model=schemas.TokenOut)
+def login(payload: schemas.UserLogin, db: Session = Depends(get_db)):
+    email = payload.email.strip().lower()
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user or not auth.verify_password(payload.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect email or password.")
+    token = auth.create_access_token(user.id)
+    return schemas.TokenOut(access_token=token, user=schemas.UserOut.model_validate(user))
+
+
+@app.get("/api/auth/me", response_model=schemas.UserOut)
+def me(current_user: models.User = Depends(auth.get_current_user)):
+    return current_user
+
+
 # ---------- Resume ----------
 @app.post("/api/resume/parse")
-async def parse_resume(file: UploadFile = File(...)):
+async def parse_resume(
+    file: UploadFile = File(...),
+    current_user: models.User | None = Depends(auth.get_current_user_optional),
+    db: Session = Depends(get_db),
+):
     content = await file.read()
     try:
         text = extract_text(file.filename, content)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     skills = extract_skills(text)
+
+    # If the person is logged in, save/update their resume in the database
+    if current_user:
+        saved = db.query(models.Resume).filter(models.Resume.user_id == current_user.id).first()
+        if saved:
+            saved.text = text.strip()
+            saved.skills = ",".join(skills)
+        else:
+            saved = models.Resume(user_id=current_user.id, text=text.strip(), skills=",".join(skills))
+            db.add(saved)
+        db.commit()
+
     return {"text": text.strip(), "skills": skills}
+
+
+@app.get("/api/resume/me", response_model=schemas.SavedResumeOut)
+def get_my_resume(current_user: models.User = Depends(auth.get_current_user), db: Session = Depends(get_db)):
+    saved = db.query(models.Resume).filter(models.Resume.user_id == current_user.id).first()
+    if not saved:
+        raise HTTPException(status_code=404, detail="No saved resume yet.")
+    return schemas.SavedResumeOut(text=saved.text, skills=saved.skills.split(",") if saved.skills else [])
 
 
 # ---------- Companies (CRUD, backed by the database) ----------
