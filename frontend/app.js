@@ -53,17 +53,22 @@ document.getElementById("authSubmitBtn").addEventListener("click", async ()=>{
 document.getElementById("logoutBtn").addEventListener("click", ()=>{
   authToken = null;
   localStorage.removeItem("thiranpathai_token");
+  localStorage.removeItem("userName");
+  localStorage.removeItem("userEmail");
   state = { resumeSkills: [], resumeText: "", learnedSkills: [], companies: [], selectedCompanyId: null };
   document.getElementById("resumeInput").value = "";
   document.getElementById("authScreen").style.display = "block";
   document.getElementById("mainApp").style.display = "none";
   document.getElementById("logoutBtn").style.display = "none";
+  const pb = document.getElementById("profileBtn");
+  if(pb) pb.style.display = "none";
 });
 
 async function enterApp(){
   document.getElementById("authScreen").style.display = "none";
   document.getElementById("mainApp").style.display = "block";
   document.getElementById("logoutBtn").style.display = "inline-block";
+  loadProfile();
   // try to restore a previously saved resume for this user
   try{
     const res = await fetch(API + "/api/resume/me", { headers: authHeaders() });
@@ -88,6 +93,45 @@ async function checkExistingSession(){
 }
 
 function cap(s){ return s.replace(/\b\w/g, c => c.toUpperCase()); }
+
+/* ---------- Profile (shows who is logged in) ---------- */
+async function loadProfile(){
+  try{
+    const res = await fetch(API + "/api/auth/me", { headers: authHeaders() });
+    if(res.ok){
+      const u = await res.json();
+      localStorage.setItem("userName", u.name || "");
+      localStorage.setItem("userEmail", u.email || "");
+    }
+  }catch(e){ /* ignore */ }
+
+  let pb = document.getElementById("profileBtn");
+  if(!pb){
+    pb = document.createElement("div");
+    pb.id = "profileBtn";
+    pb.className = "user-badge";
+    pb.onclick = showProfile;
+    pb.innerHTML = '<span class="av" id="profileInitial">U</span><span id="profileName"></span>';
+    document.body.appendChild(pb);
+  }
+  updateProfileIcon();
+  pb.style.display = "flex";
+}
+
+function updateProfileIcon(){
+  const full = localStorage.getItem("userName") || localStorage.getItem("userEmail") || "User";
+  const first = full.split(/[ @]/)[0];
+  const ini = document.getElementById("profileInitial");
+  const nm = document.getElementById("profileName");
+  if(ini) ini.textContent = full.charAt(0).toUpperCase();
+  if(nm) nm.textContent = "Hi, " + first;
+}
+
+function showProfile(){
+  const name = localStorage.getItem("userName") || "User";
+  const email = localStorage.getItem("userEmail") || "";
+  alert("Logged in as\nName: " + name + "\nEmail: " + email);
+}
 
 /* ---------- Tabs ---------- */
 document.querySelectorAll("nav.tabs button").forEach(btn=>{
@@ -352,13 +396,15 @@ async function finishQuiz(){
   document.getElementById("retryBtn").addEventListener("click", renderTestSetup);
 }
 
-/* init */
+/* ---------- Init ---------- */
 checkExistingSession();
-window.addEventListener('load', () => {
+
+/* Splash screen: show big logo for 2 seconds, then fade out */
+window.addEventListener("load", () => {
   setTimeout(() => {
-    const s = document.getElementById('splash');
+    const s = document.getElementById("splash");
     if (!s) return;
-    s.classList.add('hide');
+    s.classList.add("hide");
     setTimeout(() => s.remove(), 600);
   }, 2000);
 });
