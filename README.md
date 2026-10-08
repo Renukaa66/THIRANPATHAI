@@ -1,98 +1,89 @@
-# ThiranPathai — Full Stack Setup (VS Code)
+# ThiranPathai — AI Skill Roadmap for Placements
 
-A skill-gap and placement-readiness app: upload a resume, check fit against
-companies/roles, get a learning roadmap, and take skill quizzes.
+🔗 **Live Demo:** https://thiranpathai.onrender.com
 
-## Stack
-- **Backend:** Python, FastAPI, SQLAlchemy
-- **Database:** SQLite (file-based, zero setup — auto-created on first run)
-- **Frontend:** Plain HTML/CSS/JS (mobile-style layout), served by the backend
-- **Resume parsing:** pypdf (PDF), python-docx (DOCX), rapidfuzz (fuzzy skill matching)
+💻 **Source Code:** This repository (see folder structure below)
 
-## Folder structure
+---
+
+ThiranPathai is a placement readiness platform that helps engineering students identify the skills they lack for their target job roles — and follow a clear, ordered path to close those gaps.
+
+Most students prepare for placements without knowing exactly what employers require. Existing resume tools lean on simple keyword matching, are often paid, and aren't built around campus placements. ThiranPathai reads a student's resume, checks it against real company skill requirements, and generates a personalised, prerequisite-aware learning roadmap.
+
+## Features
+
+- **Login / Signup** — each student has their own account; resume and progress are saved
+- **Resume Upload** — Upload a resume as PDF, DOCX, or TXT; skills are extracted automatically on the server
+- **Smart Skill Matching** — Keyword, alias, and fuzzy string matching, so formatting differences (e.g. "REST API" vs "RESTful services") are still recognized
+- **Company Fit Score** — Check your match percentage against 5 default company roles, or add/edit/delete any custom company by entering its required skills
+- **Prerequisite-Aware Roadmap** — Missing skills are arranged in a logical learning order (e.g. Git before Docker), each with a direct resource link and a YouTube tutorial link
+- **Resume Auto-Update** — Mark a skill as learned, and it's automatically added back into your resume
+- **Skill Tests** — Short, server-graded quizzes to check your readiness for specific skills
+- **Mobile-Responsive** — Works like a mobile app in any phone browser, no app store install needed
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | HTML5, CSS3, Vanilla JavaScript |
+| Backend | Python, FastAPI, Uvicorn |
+| Database | SQLite (via SQLAlchemy ORM) |
+| Auth | JWT tokens, bcrypt password hashing |
+| Resume Parsing | pypdf, python-docx, rapidfuzz |
+| Deployment | Render.com |
+
+## Project Structure
+
 ```
 thiranpathai/
 ├── backend/
-│   ├── main.py          ← FastAPI app + all API routes
-│   ├── database.py      ← DB connection setup
-│   ├── models.py        ← SQLAlchemy table definitions
-│   ├── schemas.py       ← Request/response validation
-│   ├── resume_parser.py ← PDF/DOCX/TXT text + skill extraction
-│   ├── skills_data.py   ← Master skill list, quiz bank, resources
+│   ├── main.py          # FastAPI app + all API routes
+│   ├── auth.py          # Password hashing + JWT auth
+│   ├── database.py      # DB connection setup
+│   ├── models.py        # SQLAlchemy table definitions
+│   ├── schemas.py        # Request/response validation
+│   ├── resume_parser.py  # PDF/DOCX/TXT text + skill extraction
+│   ├── skills_data.py    # Master skill list, quiz bank, resources
 │   └── requirements.txt
 ├── frontend/
 │   ├── index.html
 │   ├── style.css
-│   └── app.js            ← calls the backend API with fetch()
-├── .gitignore
+│   └── app.js
 └── README.md
 ```
 
-## How to run it in VS Code
+## Getting Started (Local)
 
-1. **Open the `thiranpathai` folder** in VS Code (File → Open Folder).
+```bash
+# 1. Clone the repo
+git clone https://github.com/Renukaa66/THIRANPATHAI.git
+cd THIRANPATHAI
 
-2. **Create a virtual environment** (Terminal → New Terminal, inside the project root):
-   ```bash
-   python -m venv venv
-   ```
-   Activate it:
-   - Windows: `venv\Scripts\activate`
-   - Mac/Linux: `source venv/bin/activate`
+# 2. Create and activate a virtual environment
+python -m venv venv
+venv\Scripts\activate        # Windows
+source venv/bin/activate     # Mac/Linux
 
-3. **Install dependencies:**
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   ```
+# 3. Install dependencies
+cd backend
+pip install -r requirements.txt
 
-4. **Run the server:**
-   ```bash
-   uvicorn main:app --reload
-   ```
+# 4. Run the server
+uvicorn main:app --reload
+```
 
-5. **Open the app:** go to **http://localhost:8000** in your browser.
-   The database file `thiranpathai.db` is created automatically the first
-   time you run it, with 5 default companies already seeded.
+Open **http://localhost:8000** in your browser.
 
-6. **Try it on your phone (same WiFi):**
-   ```bash
-   uvicorn main:app --reload --host 0.0.0.0
-   ```
-   Find your computer's local IP (e.g. `192.168.1.5` — run `ipconfig` on
-   Windows or `ifconfig`/`ip a` on Mac/Linux), then on your phone's browser
-   open `http://192.168.1.5:8000`. It will look and behave like a mobile app.
+## API Documentation
 
-## Hosting it online for free (so anyone can open it)
-See the deployment steps shared in chat — in short: push this folder to
-GitHub, then create a free Web Service on **render.com** pointing at the
-`backend` folder, with:
-- Build Command: `pip install -r requirements.txt`
-- Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+Interactive API docs (Swagger UI) are available at **`/docs`** once the server is running.
 
-## API docs
-FastAPI gives you free interactive API docs at **http://localhost:8000/docs**
-— useful for your project report/demo, and for testing endpoints directly.
+## Known Limitations / Future Work
 
-## What's genuinely "AI/NLP" here, and what's a placeholder
-Be upfront about this in your viva/report:
+- Skill extraction uses keyword + fuzzy matching, not semantic embeddings — swapping in `sentence-transformers` for true meaning-based matching is a planned upgrade
+- SQLite is used for simplicity; switching to PostgreSQL is a one-line change in `database.py` for multi-user production use
+- Free hosting tier spins down after inactivity, so the first request after idle time may take 20–30 seconds to respond
 
-- **Skill extraction** currently uses keyword + alias + fuzzy-string matching
-  (`resume_parser.py`), with word-boundary matching so short skill names like
-  "C" don't wrongly match inside other words (e.g. "CSS"). This is a solid,
-  explainable baseline — not a trained ML model.
-- **Upgrade path for a stronger project:** replace/augment `extract_skills()`
-  with sentence embeddings (`sentence-transformers`) so skills are matched by
-  *meaning*, not just spelling — e.g. "RESTful services" ↔ "REST API". Compare
-  both approaches with precision/recall/F1 on a labelled test set.
-- **Database:** SQLite is fine for a demo/project. If you need multiple
-  people writing at once, switch `DATABASE_URL` in `database.py` to
-  PostgreSQL — one line change, the rest of the code doesn't need to change.
+## License
 
-## Extending it
-- Add a `Student`/`User` table + login if you want per-student accounts
-  instead of a single browser session.
-- Add a `results` table to store quiz history and match history over time
-  (currently these aren't persisted, only computed live).
-- Move `skills_data.py`'s quiz bank into database tables so a placement
-  officer can add questions without touching code.
+This project was built as a final-year academic project.
